@@ -1,0 +1,1931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberShield AI — Neural Security Matrix</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #000508;
+  --bg2: #010c10;
+  --bg3: #011218;
+  --panel: #010e15;
+  --cyan: #00fff7;
+  --cyan2: #00bcd4;
+  --green: #00ff41;
+  --red: #ff0044;
+  --amber: #ffaa00;
+  --violet: #8b5cf6;
+  --text: #a0d4dc;
+  --muted: #2a5562;
+  --mono: 'Share Tech Mono', monospace;
+  --orb: 'Orbitron', sans-serif;
+  --raj: 'Rajdhani', sans-serif;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--raj);
+  min-height: 100vh;
+  display: flex;
+  overflow-x: hidden;
+}
+
+/* Matrix rain canvas */
+#matrix-canvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  opacity: 0.04;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Scan line overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,255,247,0.01) 2px,
+    rgba(0,255,247,0.01) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+  animation: scanMove 8s linear infinite;
+}
+
+@keyframes scanMove {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 100px; }
+}
+
+/* Sidebar */
+.sidebar {
+  width: 240px;
+  min-width: 240px;
+  background: rgba(0,10,15,0.95);
+  border-right: 1px solid rgba(0,255,247,0.1);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+  backdrop-filter: blur(20px);
+}
+
+.sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 1px; height: 100%;
+  background: linear-gradient(to bottom, transparent, var(--cyan), transparent);
+  animation: sideGlow 3s ease-in-out infinite;
+}
+
+@keyframes sideGlow {
+  0%,100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+.logo {
+  padding: 24px 20px;
+  border-bottom: 1px solid rgba(0,255,247,0.08);
+  position: relative;
+}
+
+.logo-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.logo-shield {
+  width: 40px; height: 40px;
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.logo-shield svg { width: 40px; height: 40px; }
+
+@keyframes shieldPulse {
+  0%,100% { filter: drop-shadow(0 0 4px var(--cyan)); }
+  50% { filter: drop-shadow(0 0 12px var(--cyan)); }
+}
+
+.logo-shield svg { animation: shieldPulse 2s ease-in-out infinite; }
+
+.logo-text h1 {
+  font-family: var(--orb);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--cyan);
+  letter-spacing: 1px;
+  text-shadow: 0 0 20px rgba(0,255,247,0.5);
+}
+
+.logo-text span {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 2px;
+}
+
+.logo-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--green);
+}
+
+.blink-dot {
+  width: 6px; height: 6px;
+  background: var(--green);
+  border-radius: 50%;
+  animation: blink 1s step-end infinite;
+  box-shadow: 0 0 6px var(--green);
+}
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+nav { flex: 1; padding: 12px 10px; overflow-y: auto; }
+
+.nav-group-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 3px;
+  padding: 10px 10px 5px;
+  text-transform: uppercase;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 2px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  border: 1px solid transparent;
+  font-family: var(--raj);
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-item::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 0;
+  background: linear-gradient(90deg, rgba(0,255,247,0.1), transparent);
+  transition: width 0.3s;
+}
+
+.nav-item:hover::before { width: 100%; }
+.nav-item:hover { color: var(--cyan); border-color: rgba(0,255,247,0.15); }
+
+.nav-item.active {
+  background: rgba(0,255,247,0.05);
+  color: var(--cyan);
+  border-color: rgba(0,255,247,0.2);
+}
+
+.nav-item.active::after {
+  content: '';
+  position: absolute;
+  left: 0; top: 10%; bottom: 10%;
+  width: 2px;
+  background: var(--cyan);
+  box-shadow: 0 0 8px var(--cyan);
+}
+
+.nav-icon { font-size: 14px; }
+
+.sidebar-bottom {
+  padding: 16px;
+  border-top: 1px solid rgba(0,255,247,0.08);
+}
+
+.sys-info {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.8;
+}
+
+.sys-info span { color: var(--green); }
+
+/* Main */
+.main {
+  margin-left: 240px;
+  flex: 1;
+  min-height: 100vh;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Topbar */
+.topbar {
+  padding: 14px 28px;
+  border-bottom: 1px solid rgba(0,255,247,0.08);
+  background: rgba(0,5,8,0.9);
+  backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky; top: 0; z-index: 50;
+}
+
+.topbar-left { display: flex; flex-direction: column; gap: 2px; }
+
+.topbar-path {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 2px;
+}
+
+.topbar-title {
+  font-family: var(--orb);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cyan);
+  text-shadow: 0 0 20px rgba(0,255,247,0.3);
+  letter-spacing: 1px;
+}
+
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+
+.tb-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border-radius: 2px;
+  font-family: var(--mono);
+  font-size: 10px;
+  border: 1px solid;
+}
+
+.tb-chip.green { background: rgba(0,255,65,0.05); border-color: rgba(0,255,65,0.2); color: var(--green); }
+.tb-chip.cyan { background: rgba(0,255,247,0.05); border-color: rgba(0,255,247,0.2); color: var(--cyan); }
+
+/* Content */
+.content { padding: 24px 28px; flex: 1; }
+
+/* Panels */
+.panel { display: none; max-width: 920px; }
+.panel.active { display: block; animation: panelIn 0.3s ease; }
+
+@keyframes panelIn {
+  from { opacity:0; transform:translateY(8px); }
+  to { opacity:1; transform:none; }
+}
+
+/* Back button */
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 16px;
+  background: rgba(0,255,247,0.03);
+  border: 1px solid rgba(0,255,247,0.15);
+  border-radius: 2px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 18px;
+  letter-spacing: 1px;
+}
+.back-btn:hover { border-color: var(--cyan); color: var(--cyan); background: rgba(0,255,247,0.06); }
+
+/* Dashboard */
+.dash-greeting {
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.dash-greeting h2 {
+  font-family: var(--orb);
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.dash-greeting h2 span { color: var(--cyan); text-shadow: 0 0 20px rgba(0,255,247,0.5); }
+
+.dash-greeting p {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Live threat ticker */
+.threat-ticker {
+  background: rgba(255,0,68,0.04);
+  border: 1px solid rgba(255,0,68,0.15);
+  border-radius: 2px;
+  padding: 8px 16px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.ticker-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--red);
+  white-space: nowrap;
+  letter-spacing: 2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ticker-text {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  animation: tickerScroll 20s linear infinite;
+}
+
+@keyframes tickerScroll {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+/* Stats grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: var(--panel);
+  border: 1px solid rgba(0,255,247,0.08);
+  border-radius: 2px;
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+
+.stat-card:hover { border-color: rgba(0,255,247,0.2); }
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+}
+
+.sc-c::before { background: linear-gradient(90deg, var(--cyan), transparent); }
+.sc-g::before { background: linear-gradient(90deg, var(--green), transparent); }
+.sc-r::before { background: linear-gradient(90deg, var(--red), transparent); }
+.sc-a::before { background: linear-gradient(90deg, var(--amber), transparent); }
+
+.stat-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.stat-val {
+  font-family: var(--orb);
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.stat-sub {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.stat-card.sc-c .stat-val { color: var(--cyan); text-shadow: 0 0 15px rgba(0,255,247,0.4); }
+.stat-card.sc-g .stat-val { color: var(--green); text-shadow: 0 0 15px rgba(0,255,65,0.4); }
+.stat-card.sc-r .stat-val { color: var(--red); text-shadow: 0 0 15px rgba(255,0,68,0.4); }
+.stat-card.sc-a .stat-val { color: var(--amber); text-shadow: 0 0 15px rgba(255,170,0,0.4); }
+
+/* Tool grid */
+.tool-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.tool-card {
+  background: var(--panel);
+  border: 1px solid rgba(0,255,247,0.08);
+  border-radius: 2px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.25s;
+  position: relative;
+  overflow: hidden;
+}
+
+.tool-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(0,255,247,0.03), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.tool-card:hover { border-color: rgba(0,255,247,0.25); transform: translateY(-2px); }
+.tool-card:hover::after { opacity: 1; }
+
+.tc-corner {
+  position: absolute;
+  top: 8px; right: 8px;
+  width: 12px; height: 12px;
+  border-top: 1px solid rgba(0,255,247,0.3);
+  border-right: 1px solid rgba(0,255,247,0.3);
+}
+
+.tc-corner-bl {
+  position: absolute;
+  bottom: 8px; left: 8px;
+  width: 12px; height: 12px;
+  border-bottom: 1px solid rgba(0,255,247,0.1);
+  border-left: 1px solid rgba(0,255,247,0.1);
+}
+
+.tc-icon { font-size: 28px; margin-bottom: 12px; }
+.tc-title {
+  font-family: var(--orb);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--cyan);
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  text-shadow: 0 0 10px rgba(0,255,247,0.3);
+}
+.tc-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+.tc-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--green);
+}
+
+/* Live activity feed */
+.activity-feed {
+  background: var(--panel);
+  border: 1px solid rgba(0,255,247,0.08);
+  border-radius: 2px;
+  padding: 16px;
+}
+
+.feed-title {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.feed-title::after { content: ''; flex: 1; height: 1px; background: rgba(0,255,247,0.08); }
+
+.feed-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(0,255,247,0.04);
+  font-family: var(--mono);
+  font-size: 11px;
+  animation: feedSlide 0.5s ease;
+}
+
+@keyframes feedSlide {
+  from { opacity:0; transform:translateX(-10px); }
+  to { opacity:1; transform:none; }
+}
+
+.feed-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.fd-green { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.fd-red { background: var(--red); box-shadow: 0 0 6px var(--red); }
+.fd-amber { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+.fd-cyan { background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
+
+.feed-time { color: var(--muted); min-width: 50px; }
+.feed-msg { color: var(--text); flex: 1; }
+.feed-badge {
+  padding: 2px 8px; border-radius: 2px; font-size: 9px; font-weight: 700;
+}
+.fb-safe { background: rgba(0,255,65,0.1); color: var(--green); border: 1px solid rgba(0,255,65,0.2); }
+.fb-warn { background: rgba(255,170,0,0.1); color: var(--amber); border: 1px solid rgba(255,170,0,0.2); }
+.fb-danger { background: rgba(255,0,68,0.1); color: var(--red); border: 1px solid rgba(255,0,68,0.2); }
+
+/* Tool panels */
+.tool-panel-wrap {
+  background: var(--panel);
+  border: 1px solid rgba(0,255,247,0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.tool-panel-wrap::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  animation: scanLine 4s ease-in-out infinite;
+}
+
+@keyframes scanLine {
+  0% { opacity:0.3; } 50% { opacity:1; } 100% { opacity:0.3; }
+}
+
+.tool-panel-head {
+  padding: 18px 24px;
+  border-bottom: 1px solid rgba(0,255,247,0.08);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(0,255,247,0.02);
+}
+
+.tph-icon {
+  width: 46px; height: 46px;
+  border: 1px solid rgba(0,255,247,0.2);
+  border-radius: 2px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  background: rgba(0,255,247,0.04);
+  position: relative;
+}
+
+.tph-icon::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 2px;
+  background: linear-gradient(135deg, rgba(0,255,247,0.2), transparent, rgba(0,255,247,0.1));
+  z-index: -1;
+}
+
+.tph-info { flex: 1; }
+.tph-title {
+  font-family: var(--orb);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cyan);
+  letter-spacing: 1px;
+  margin-bottom: 3px;
+}
+.tph-desc { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 1px; }
+
+.tph-status {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--green);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.tool-panel-body { padding: 24px; }
+
+/* Inputs */
+.field { margin-bottom: 16px; }
+
+.field-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.field-label::before { content: '//'; color: rgba(0,255,247,0.3); }
+
+input[type="text"], textarea {
+  width: 100%;
+  background: rgba(0,255,247,0.02);
+  border: 1px solid rgba(0,255,247,0.1);
+  border-radius: 2px;
+  padding: 11px 14px;
+  color: var(--cyan);
+  font-family: var(--mono);
+  font-size: 13px;
+  outline: none;
+  transition: all 0.2s;
+  caret-color: var(--cyan);
+}
+
+input[type="text"]:focus, textarea:focus {
+  border-color: rgba(0,255,247,0.4);
+  background: rgba(0,255,247,0.04);
+  box-shadow: 0 0 20px rgba(0,255,247,0.05), inset 0 0 20px rgba(0,255,247,0.02);
+}
+
+input::placeholder, textarea::placeholder { color: var(--muted); }
+textarea { resize: vertical; min-height: 110px; line-height: 1.6; }
+
+/* Upload zone */
+.upload-zone {
+  border: 1px dashed rgba(0,255,247,0.15);
+  border-radius: 2px;
+  padding: 28px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  background: rgba(0,255,247,0.01);
+}
+
+.upload-zone:hover { border-color: rgba(0,255,247,0.35); background: rgba(0,255,247,0.03); }
+.upload-zone input { position: absolute; inset:0; opacity:0; cursor:pointer; width:100%; }
+.upload-icon { font-size: 30px; margin-bottom: 8px; }
+.upload-text { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.upload-text b { color: var(--cyan); }
+
+/* Scan button */
+.btn-scan {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 28px;
+  background: transparent;
+  border: 1px solid var(--cyan);
+  border-radius: 2px;
+  color: var(--cyan);
+  font-family: var(--orb);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+}
+
+.btn-scan::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(0,255,247,0.1), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.4s;
+}
+
+.btn-scan:hover::before { transform: translateX(100%); }
+.btn-scan:hover {
+  background: rgba(0,255,247,0.08);
+  box-shadow: 0 0 20px rgba(0,255,247,0.2), inset 0 0 20px rgba(0,255,247,0.05);
+  text-shadow: 0 0 10px var(--cyan);
+}
+
+/* Loading animation */
+.loading { display: none; }
+.loading.show { display: block; }
+
+.scan-animation {
+  margin: 20px 0;
+  background: rgba(0,255,247,0.02);
+  border: 1px solid rgba(0,255,247,0.08);
+  border-radius: 2px;
+  padding: 20px;
+}
+
+.scan-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.scan-title {
+  font-family: var(--orb);
+  font-size: 11px;
+  color: var(--cyan);
+  letter-spacing: 2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.scan-pct {
+  font-family: var(--orb);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--cyan);
+  text-shadow: 0 0 10px rgba(0,255,247,0.5);
+}
+
+.scan-bar-track {
+  height: 3px;
+  background: rgba(0,255,247,0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 14px;
+  position: relative;
+}
+
+.scan-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--cyan), #00fff7);
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.1s;
+  box-shadow: 0 0 8px var(--cyan);
+}
+
+.scan-bar-glow {
+  position: absolute;
+  top: -4px; bottom: -4px;
+  width: 20px;
+  background: rgba(0,255,247,0.6);
+  filter: blur(4px);
+  border-radius: 50%;
+  left: 0%;
+  transition: left 0.1s;
+}
+
+.scan-lines {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.8;
+  max-height: 80px;
+  overflow: hidden;
+}
+
+.scan-lines .line {
+  animation: lineFade 0.3s ease;
+  color: rgba(0,255,247,0.5);
+}
+
+@keyframes lineFade {
+  from { opacity:0; transform: translateX(-5px); }
+  to { opacity:1; transform:none; }
+}
+
+/* Result box */
+.result-wrap { display: none; }
+.result-wrap.show { display: block; animation: panelIn 0.4s ease; margin-top: 20px; }
+
+/* Risk circle */
+.result-top {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.risk-circle-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.risk-circle {
+  width: 90px; height: 90px;
+  position: relative;
+}
+
+.risk-circle svg {
+  width: 90px; height: 90px;
+  transform: rotate(-90deg);
+}
+
+.risk-circle-bg { fill: none; stroke: rgba(0,255,247,0.06); stroke-width: 4; }
+.risk-circle-fill {
+  fill: none;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 251;
+  stroke-dashoffset: 251;
+  transition: stroke-dashoffset 1.5s cubic-bezier(0.4,0,0.2,1);
+}
+
+.risk-circle-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.risk-pct {
+  font-family: var(--orb);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.risk-label-sm {
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--muted);
+  margin-top: 2px;
+  letter-spacing: 1px;
+}
+
+.risk-circle-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+
+.verdict-info { flex: 1; }
+
+.verdict-badge-big {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 20px;
+  border-radius: 2px;
+  font-family: var(--orb);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.vb-safe { background: rgba(0,255,65,0.08); color: var(--green); border: 1px solid rgba(0,255,65,0.3); box-shadow: 0 0 20px rgba(0,255,65,0.1); }
+.vb-warn { background: rgba(255,170,0,0.08); color: var(--amber); border: 1px solid rgba(255,170,0,0.3); box-shadow: 0 0 20px rgba(255,170,0,0.1); }
+.vb-danger { background: rgba(255,0,68,0.08); color: var(--red); border: 1px solid rgba(255,0,68,0.3); box-shadow: 0 0 20px rgba(255,0,68,0.1); animation: dangerPulse 1s ease-in-out 3; }
+
+@keyframes dangerPulse {
+  0%,100% { box-shadow: 0 0 20px rgba(255,0,68,0.1); }
+  50% { box-shadow: 0 0 40px rgba(255,0,68,0.3); }
+}
+
+.verdict-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.8;
+}
+
+/* Result blocks */
+.result-blocks { display: flex; flex-direction: column; gap: 10px; }
+
+.r-block {
+  background: rgba(0,255,247,0.02);
+  border: 1px solid rgba(0,255,247,0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.r-block-head {
+  padding: 7px 14px;
+  background: rgba(0,255,247,0.04);
+  border-bottom: 1px solid rgba(0,255,247,0.06);
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.r-block-head::before { content: '▸'; color: var(--cyan); font-size: 10px; }
+
+.r-block-body {
+  padding: 12px 14px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+/* Check grid */
+.check-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.check-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border-radius: 2px;
+  font-family: var(--mono);
+  font-size: 11px;
+  border: 1px solid;
+}
+
+.ci-pass { background: rgba(0,255,65,0.04); color: var(--green); border-color: rgba(0,255,65,0.15); }
+.ci-fail { background: rgba(255,0,68,0.04); color: var(--red); border-color: rgba(255,0,68,0.15); }
+
+/* Port tags */
+.port-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.port-tag {
+  padding: 4px 10px; border-radius: 2px;
+  font-family: var(--mono); font-size: 11px;
+  background: rgba(255,0,68,0.06);
+  color: var(--red);
+  border: 1px solid rgba(255,0,68,0.2);
+}
+
+/* Tabs */
+.tabs { display: flex; gap: 0; margin-bottom: 16px; border: 1px solid rgba(0,255,247,0.1); border-radius: 2px; overflow: hidden; }
+.tab {
+  flex: 1; padding: 8px;
+  background: transparent;
+  border: none; border-right: 1px solid rgba(0,255,247,0.1);
+  color: var(--muted);
+  font-family: var(--mono); font-size: 11px; letter-spacing: 1px;
+  cursor: pointer; transition: all 0.2s;
+}
+.tab:last-child { border-right: none; }
+.tab.active { background: rgba(0,255,247,0.06); color: var(--cyan); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* Warn note */
+.warn-note {
+  font-family: var(--mono); font-size: 10px;
+  color: var(--amber); margin: 8px 0 12px;
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* Guide */
+.guide-banner {
+  background: var(--panel);
+  border: 1px solid rgba(0,255,247,0.1);
+  border-radius: 2px;
+  padding: 24px;
+  margin-bottom: 18px;
+  position: relative;
+  overflow: hidden;
+}
+
+.guide-banner::before {
+  content: 'SHIELD';
+  position: absolute;
+  right: 20px; top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--orb);
+  font-size: 80px;
+  font-weight: 900;
+  color: rgba(0,255,247,0.03);
+  letter-spacing: 8px;
+  pointer-events: none;
+}
+
+.guide-banner h2 {
+  font-family: var(--orb);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--cyan);
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+  text-shadow: 0 0 20px rgba(0,255,247,0.4);
+}
+
+.guide-banner p { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+
+.guide-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+
+.guide-card {
+  background: var(--panel);
+  border: 1px solid rgba(0,255,247,0.08);
+  border-radius: 2px;
+  padding: 18px;
+}
+
+.guide-card-head {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(0,255,247,0.06);
+}
+
+.guide-card-head span { font-size: 18px; }
+
+.guide-card-head h3 {
+  font-family: var(--orb);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--cyan);
+  letter-spacing: 1px;
+}
+
+.gtip {
+  display: flex; align-items: flex-start; gap: 8px;
+  margin-bottom: 8px; font-size: 12px; color: var(--text); line-height: 1.5;
+  font-family: var(--raj);
+}
+
+.gtip-arrow {
+  font-family: var(--mono); font-size: 10px; color: var(--cyan);
+  flex-shrink: 0; margin-top: 2px;
+}
+
+/* File name display */
+.file-name-display {
+  font-family: var(--mono); font-size: 11px; color: var(--cyan);
+  margin-bottom: 12px; display: none;
+  padding: 6px 12px;
+  background: rgba(0,255,247,0.04);
+  border: 1px solid rgba(0,255,247,0.1);
+  border-radius: 2px;
+}
+</style>
+</head>
+<body>
+
+<canvas id="matrix-canvas"></canvas>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-top">
+      <div class="logo-shield">
+        <svg viewBox="0 0 40 40" fill="none">
+          <path d="M20 3L5 10V22C5 30 12 37 20 39C28 37 35 30 35 22V10L20 3Z" fill="rgba(0,255,247,0.06)" stroke="rgba(0,255,247,0.5)" stroke-width="0.8"/>
+          <path d="M20 8L9 14V22C9 28 14 33 20 35C26 33 31 28 31 22V14L20 8Z" fill="rgba(0,255,247,0.03)" stroke="rgba(0,255,247,0.2)" stroke-width="0.5"/>
+          <text x="20" y="26" text-anchor="middle" fill="#00fff7" font-size="13" font-family="monospace">⚡</text>
+        </svg>
+      </div>
+      <div class="logo-text">
+        <h1>CYBERSHIELD</h1>
+        <span>NEURAL SECURITY AI</span>
+      </div>
+    </div>
+    <div class="logo-status">
+      <div class="blink-dot"></div>
+      SYSTEM ONLINE // v2.0
+    </div>
+  </div>
+
+  <nav>
+    <div class="nav-group-label">// Overview</div>
+    <div class="nav-item active" onclick="showPanel('dashboard',this)">
+      <span class="nav-icon">⊞</span> Dashboard
+    </div>
+    <div class="nav-group-label" style="margin-top:8px">// Security Tools</div>
+    <div class="nav-item" onclick="showPanel('phishing',this)"><span class="nav-icon">🔗</span> Phishing Detector</div>
+    <div class="nav-item" onclick="showPanel('password',this)"><span class="nav-icon">🔑</span> Password Checker</div>
+    <div class="nav-item" onclick="showPanel('portscan',this)"><span class="nav-icon">📡</span> Port Scanner</div>
+    <div class="nav-item" onclick="showPanel('anomaly',this)"><span class="nav-icon">📊</span> Anomaly Detection</div>
+    <div class="nav-item" onclick="showPanel('filescan',this)"><span class="nav-icon">📁</span> File Scanner</div>
+    <div class="nav-item" onclick="showPanel('messagescan',this)"><span class="nav-icon">💬</span> Message Scanner</div>
+    <div class="nav-group-label" style="margin-top:8px">// Education</div>
+    <div class="nav-item" onclick="showPanel('guide',this)"><span class="nav-icon">📖</span> Safety Guide</div>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="sys-info">
+      <div>GEMINI_AI_STATUS: <span>CONNECTED</span></div>
+      <div>THREAT_LEVEL: <span>NOMINAL</span></div>
+      <div>ENGINE: <span>GEMINI-1.5-FLASH</span></div>
+    </div>
+  </div>
+</aside>
+
+<!-- Main -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-path" id="page-path">ROOT / DASHBOARD</div>
+      <div class="topbar-title" id="page-title">SECURITY DASHBOARD</div>
+    </div>
+    <div class="topbar-right">
+      <div class="tb-chip green"><div class="blink-dot"></div>ALL SYSTEMS NORMAL</div>
+      <div class="tb-chip cyan">GEMINI AI ACTIVE</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- Dashboard -->
+    <div class="panel active" id="panel-dashboard">
+      <div class="dash-greeting">
+        <h2>NEURAL SECURITY <span>MATRIX</span></h2>
+        <p>// Real-time AI-powered cybersecurity analysis suite — Powered by Google Gemini</p>
+      </div>
+
+      <div class="threat-ticker">
+        <div class="ticker-label"><div class="blink-dot" style="background:var(--red);box-shadow:0 0 6px var(--red)"></div>LIVE FEED</div>
+        <div class="ticker-text">⚠ PHISHING ATTEMPT BLOCKED: fake-bank-login.xyz [HIGH RISK] &nbsp;&nbsp;&nbsp; ✓ PASSWORD SCAN COMPLETE: Strength 94/100 [STRONG] &nbsp;&nbsp;&nbsp; ⚠ PORT SCAN: 3 open ports detected on 192.168.1.5 [MEDIUM] &nbsp;&nbsp;&nbsp; ✓ FILE SCAN: document.pdf [CLEAN] &nbsp;&nbsp;&nbsp; ⚠ MESSAGE DETECTED: Prize scam via SMS [SCAM DETECTED]</div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card sc-c">
+          <div class="stat-label">// Tools Active</div>
+          <div class="stat-val">07</div>
+          <div class="stat-sub">Security modules online</div>
+        </div>
+        <div class="stat-card sc-g">
+          <div class="stat-label">// Threats Blocked</div>
+          <div class="stat-val" id="blocked-count">142</div>
+          <div class="stat-sub">This session</div>
+        </div>
+        <div class="stat-card sc-r">
+          <div class="stat-label">// Risk Level</div>
+          <div class="stat-val">LOW</div>
+          <div class="stat-sub">Network status nominal</div>
+        </div>
+        <div class="stat-card sc-a">
+          <div class="stat-label">// AI Response</div>
+          <div class="stat-val">&lt;1s</div>
+          <div class="stat-sub">Avg analysis time</div>
+        </div>
+      </div>
+
+      <div class="tool-grid">
+        <div class="tool-card" onclick="showPanel('phishing',document.querySelectorAll('.nav-item')[1])">
+          <div class="tc-corner"></div><div class="tc-corner-bl"></div>
+          <div class="tc-icon">🔗</div>
+          <div class="tc-title">PHISHING DETECTOR</div>
+          <div class="tc-desc">AI scans URLs for phishing traps, malware links and fraud indicators in real-time.</div>
+          <div class="tc-status"><div class="blink-dot"></div>READY</div>
+        </div>
+        <div class="tool-card" onclick="showPanel('password',document.querySelectorAll('.nav-item')[2])">
+          <div class="tc-corner"></div><div class="tc-corner-bl"></div>
+          <div class="tc-icon">🔑</div>
+          <div class="tc-title">PASSWORD CHECKER</div>
+          <div class="tc-desc">Evaluates password entropy and provides AI-powered recommendations to strengthen security.</div>
+          <div class="tc-status"><div class="blink-dot"></div>READY</div>
+        </div>
+        <div class="tool-card" onclick="showPanel('portscan',document.querySelectorAll('.nav-item')[3])">
+          <div class="tc-corner"></div><div class="tc-corner-bl"></div>
+          <div class="tc-icon">📡</div>
+          <div class="tc-title">PORT SCANNER</div>
+          <div class="tc-desc">Scans 16 common ports on any host and generates an AI security risk assessment report.</div>
+          <div class="tc-status"><div class="blink-dot"></div>READY</div>
+        </div>
+        <div class="tool-card" onclick="showPanel('anomaly',document.querySelectorAll('.nav-item')[4])">
+          <div class="tc-corner"></div><div class="tc-corner-bl"></div>
+          <div class="tc-icon">📊</div>
+          <div class="tc-title">ANOMALY DETECTION</div>
+          <div class="tc-desc">Neural analysis of log data and network traffic to detect intrusions and attack patterns.</div>
+          <div class="tc-status"><div class="blink-dot"></div>READY</div>
+        </div>
+        <div class="tool-card" onclick="showPanel('filescan',document.querySelectorAll('.nav-item')[5])">
+          <div class="tc-corner"></div><div class="tc-corner-bl"></div>
+          <div class="tc-icon">📁</div>
+          <div class="tc-title">FILE SCANNER</div>
+          <div class="tc-desc">Deep byte-level analysis of uploaded files for malware, trojans and malicious code signatures.</div>
+          <div class="tc-status"><div class="blink-dot"></div>READY</div>
+        </div>
+        <div class="tool-card" onclick="showPanel('messagescan',document.querySelectorAll('.nav-item')[6])">
+          <div class="tc-corner"></div><div class="tc-corner-bl"></div>
+          <div class="tc-icon">💬</div>
+          <div class="tc-title">MESSAGE SCANNER</div>
+          <div class="tc-desc">AI vision + NLP analysis of text messages and screenshots to detect scams and phishing.</div>
+          <div class="tc-status"><div class="blink-dot"></div>READY</div>
+        </div>
+      </div>
+
+      <div class="activity-feed">
+        <div class="feed-title">// Live Activity Feed</div>
+        <div id="live-feed"></div>
+      </div>
+    </div>
+
+    <!-- Phishing -->
+    <div class="panel" id="panel-phishing">
+      <button class="back-btn" onclick="goHome()">← BACK TO DASHBOARD</button>
+      <div class="tool-panel-wrap">
+        <div class="tool-panel-head">
+          <div class="tph-icon">🔗</div>
+          <div class="tph-info">
+            <div class="tph-title">PHISHING URL DETECTOR</div>
+            <div class="tph-desc">// AI-powered real-time URL threat analysis engine</div>
+          </div>
+          <div class="tph-status"><div class="blink-dot"></div>ONLINE</div>
+        </div>
+        <div class="tool-panel-body">
+          <div class="field">
+            <div class="field-label">Target URL</div>
+            <input type="text" id="phishing-url" placeholder="https://suspicious-site.com/login/verify"/>
+          </div>
+          <button class="btn-scan" onclick="checkPhishing()">▶ INITIATE SCAN</button>
+          <div class="loading" id="phishing-loading">
+            <div class="scan-animation">
+              <div class="scan-header">
+                <div class="scan-title"><div class="blink-dot"></div>SCANNING TARGET...</div>
+                <div class="scan-pct" id="phishing-pct">0%</div>
+              </div>
+              <div class="scan-bar-track">
+                <div class="scan-bar-fill" id="phishing-bar"></div>
+                <div class="scan-bar-glow" id="phishing-glow"></div>
+              </div>
+              <div class="scan-lines" id="phishing-lines"></div>
+            </div>
+          </div>
+          <div class="result-wrap" id="phishing-result"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Password -->
+    <div class="panel" id="panel-password">
+      <button class="back-btn" onclick="goHome()">← BACK TO DASHBOARD</button>
+      <div class="tool-panel-wrap">
+        <div class="tool-panel-head">
+          <div class="tph-icon">🔑</div>
+          <div class="tph-info">
+            <div class="tph-title">PASSWORD STRENGTH ANALYZER</div>
+            <div class="tph-desc">// Entropy calculation + AI security recommendations</div>
+          </div>
+          <div class="tph-status"><div class="blink-dot"></div>ONLINE</div>
+        </div>
+        <div class="tool-panel-body">
+          <div class="field">
+            <div class="field-label">Password String</div>
+            <input type="text" id="password-input" placeholder="Enter password to analyze..."/>
+          </div>
+          <button class="btn-scan" onclick="checkPassword()">▶ ANALYZE ENTROPY</button>
+          <div class="loading" id="password-loading">
+            <div class="scan-animation">
+              <div class="scan-header">
+                <div class="scan-title"><div class="blink-dot"></div>CALCULATING ENTROPY...</div>
+                <div class="scan-pct" id="password-pct">0%</div>
+              </div>
+              <div class="scan-bar-track">
+                <div class="scan-bar-fill" id="password-bar"></div>
+                <div class="scan-bar-glow" id="password-glow"></div>
+              </div>
+              <div class="scan-lines" id="password-lines"></div>
+            </div>
+          </div>
+          <div class="result-wrap" id="password-result"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Port Scanner -->
+    <div class="panel" id="panel-portscan">
+      <button class="back-btn" onclick="goHome()">← BACK TO DASHBOARD</button>
+      <div class="tool-panel-wrap">
+        <div class="tool-panel-head">
+          <div class="tph-icon">📡</div>
+          <div class="tph-info">
+            <div class="tph-title">NETWORK PORT SCANNER</div>
+            <div class="tph-desc">// TCP port sweep + AI vulnerability assessment</div>
+          </div>
+          <div class="tph-status"><div class="blink-dot"></div>ONLINE</div>
+        </div>
+        <div class="tool-panel-body">
+          <div class="field">
+            <div class="field-label">Target Host / IP</div>
+            <input type="text" id="host-input" placeholder="e.g. scanme.nmap.org or 192.168.1.1"/>
+          </div>
+          <div class="warn-note">⚠ Only scan hosts you own or have explicit permission to test.</div>
+          <button class="btn-scan" onclick="scanPorts()">▶ INITIATE PORT SWEEP</button>
+          <div class="loading" id="portscan-loading">
+            <div class="scan-animation">
+              <div class="scan-header">
+                <div class="scan-title"><div class="blink-dot"></div>SWEEPING PORTS...</div>
+                <div class="scan-pct" id="portscan-pct">0%</div>
+              </div>
+              <div class="scan-bar-track">
+                <div class="scan-bar-fill" id="portscan-bar"></div>
+                <div class="scan-bar-glow" id="portscan-glow"></div>
+              </div>
+              <div class="scan-lines" id="portscan-lines"></div>
+            </div>
+          </div>
+          <div class="result-wrap" id="portscan-result"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Anomaly -->
+    <div class="panel" id="panel-anomaly">
+      <button class="back-btn" onclick="goHome()">← BACK TO DASHBOARD</button>
+      <div class="tool-panel-wrap">
+        <div class="tool-panel-head">
+          <div class="tph-icon">📊</div>
+          <div class="tph-info">
+            <div class="tph-title">ANOMALY DETECTION ENGINE</div>
+            <div class="tph-desc">// Neural pattern analysis of logs and network traffic</div>
+          </div>
+          <div class="tph-status"><div class="blink-dot"></div>ONLINE</div>
+        </div>
+        <div class="tool-panel-body">
+          <div class="field">
+            <div class="field-label">Log Data / Network Traffic</div>
+            <textarea id="log-input" placeholder="// Paste server logs, access logs, or network data here..."></textarea>
+          </div>
+          <button class="btn-scan" onclick="detectAnomaly()">▶ RUN NEURAL ANALYSIS</button>
+          <div class="loading" id="anomaly-loading">
+            <div class="scan-animation">
+              <div class="scan-header">
+                <div class="scan-title"><div class="blink-dot"></div>ANALYZING PATTERNS...</div>
+                <div class="scan-pct" id="anomaly-pct">0%</div>
+              </div>
+              <div class="scan-bar-track">
+                <div class="scan-bar-fill" id="anomaly-bar"></div>
+                <div class="scan-bar-glow" id="anomaly-glow"></div>
+              </div>
+              <div class="scan-lines" id="anomaly-lines"></div>
+            </div>
+          </div>
+          <div class="result-wrap" id="anomaly-result"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- File Scanner -->
+    <div class="panel" id="panel-filescan">
+      <button class="back-btn" onclick="goHome()">← BACK TO DASHBOARD</button>
+      <div class="tool-panel-wrap">
+        <div class="tool-panel-head">
+          <div class="tph-icon">📁</div>
+          <div class="tph-info">
+            <div class="tph-title">FILE MALWARE SCANNER</div>
+            <div class="tph-desc">// Deep byte analysis + AI signature detection</div>
+          </div>
+          <div class="tph-status"><div class="blink-dot"></div>ONLINE</div>
+        </div>
+        <div class="tool-panel-body">
+          <div class="field">
+            <div class="field-label">Upload File for Analysis</div>
+            <div class="upload-zone">
+              <input type="file" id="file-input"/>
+              <div class="upload-icon">📁</div>
+              <div class="upload-text"><b>[ CLICK TO UPLOAD ]</b> or drag & drop file</div>
+              <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:4px">Supported: .txt .pdf .exe .zip .js .py .bat .sh</div>
+            </div>
+          </div>
+          <div id="file-name" class="file-name-display"></div>
+          <button class="btn-scan" onclick="scanFile()">▶ INITIATE FILE SCAN</button>
+          <div class="loading" id="filescan-loading">
+            <div class="scan-animation">
+              <div class="scan-header">
+                <div class="scan-title"><div class="blink-dot"></div>SCANNING FILE BYTES...</div>
+                <div class="scan-pct" id="filescan-pct">0%</div>
+              </div>
+              <div class="scan-bar-track">
+                <div class="scan-bar-fill" id="filescan-bar"></div>
+                <div class="scan-bar-glow" id="filescan-glow"></div>
+              </div>
+              <div class="scan-lines" id="filescan-lines"></div>
+            </div>
+          </div>
+          <div class="result-wrap" id="filescan-result"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Message Scanner -->
+    <div class="panel" id="panel-messagescan">
+      <button class="back-btn" onclick="goHome()">← BACK TO DASHBOARD</button>
+      <div class="tool-panel-wrap">
+        <div class="tool-panel-head">
+          <div class="tph-icon">💬</div>
+          <div class="tph-info">
+            <div class="tph-title">MESSAGE THREAT SCANNER</div>
+            <div class="tph-desc">// NLP + AI vision scam and phishing detection</div>
+          </div>
+          <div class="tph-status"><div class="blink-dot"></div>ONLINE</div>
+        </div>
+        <div class="tool-panel-body">
+          <div class="tabs">
+            <button class="tab active" onclick="switchTab('msg-text',this)">[ TEXT MESSAGE ]</button>
+            <button class="tab" onclick="switchTab('msg-img',this)">[ SCREENSHOT ]</button>
+          </div>
+          <div class="tab-content active" id="msg-text">
+            <div class="field">
+              <div class="field-label">Message Content</div>
+              <textarea id="message-input" placeholder="// Paste the suspicious message here..."></textarea>
+            </div>
+          </div>
+          <div class="tab-content" id="msg-img">
+            <div class="field">
+              <div class="field-label">Screenshot Upload</div>
+              <div class="upload-zone">
+                <input type="file" id="screenshot-input" accept="image/*"/>
+                <div class="upload-icon">📷</div>
+                <div class="upload-text"><b>[ UPLOAD SCREENSHOT ]</b> of suspicious message</div>
+              </div>
+            </div>
+          </div>
+          <button class="btn-scan" onclick="scanMessage()">▶ SCAN FOR THREATS</button>
+          <div class="loading" id="message-loading">
+            <div class="scan-animation">
+              <div class="scan-header">
+                <div class="scan-title"><div class="blink-dot"></div>ANALYZING MESSAGE...</div>
+                <div class="scan-pct" id="message-pct">0%</div>
+              </div>
+              <div class="scan-bar-track">
+                <div class="scan-bar-fill" id="message-bar"></div>
+                <div class="scan-bar-glow" id="message-glow"></div>
+              </div>
+              <div class="scan-lines" id="message-lines"></div>
+            </div>
+          </div>
+          <div class="result-wrap" id="message-result"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Safety Guide -->
+    <div class="panel" id="panel-guide">
+      <button class="back-btn" onclick="goHome()">← BACK TO DASHBOARD</button>
+      <div class="guide-banner">
+        <h2>// CYBERSECURITY FIELD MANUAL</h2>
+        <p>Essential threat intelligence and protection protocols — curated by CyberShield AI</p>
+      </div>
+      <div class="guide-grid">
+        <div class="guide-card">
+          <div class="guide-card-head"><span>🔑</span><h3>PASSWORD SECURITY</h3></div>
+          <div class="gtip"><div class="gtip-arrow">→</div>Use minimum 12 characters with mixed case, numbers and symbols.</div>
+          <div class="gtip"><div class="gtip-arrow">→</div>Never reuse passwords across multiple platforms or services.</div>
+          <div class="gtip"><div class="gtip-arrow">→</div>Use Bitwarden — a free, open-source password manager.</div>
+          <div class="gtip"><div class="gtip-arrow">→</div>Enable 2FA on every critical account without exception.</div>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-head"><span>🔗</span><h3>SAFE BROWSING</h3></div>
+          <div class="gtip"><div class="gtip-arrow">→</div>Always verify URL authenticity before entering credentials.</div>
+          <div class="gtip"><div class="gtip-arrow">→</div>HTTPS + padlock = encrypted. HTTP = never use for sensitive data.</div>
+          <div class="gtip"><div class="gtip-arrow">→</div>Type URLs manually — never click links in emails.</div>
+          <div class="gtip"><div class="gtip-arrow">→</div>Only download software from official, verified sources.</div>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-head"><span>📱</span><h3>MOBILE SECURITY</h3></div>
+          <div class="gtip"><div class="gtip-arrow">→</div>Install apps exclusively from Play Store or App Store.</div>
+          <div class="gtip"><div class="gtip-arrow">→</div>Audit app permissions — deny unnecessary access requests.</div>
+          <div class="gtip"><div class="gtip-arrow">→</div>Keep OS and apps updated — patches fix exploits.</div>
+          <div class="gtip"><div class="gtip-arrow">→</div>Use biometric lock — never share your PIN.</div>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-head"><span>📧</span><h3>PHISHING DEFENSE</h3></div>
+          <div class="gtip"><div class="gtip-arrow">→</div>Banks never request passwords or OTPs via email or SMS.</div>
+          <div class="gtip"><div class="gtip-arrow">→</div>Urgent prize or threat messages = immediate red flag.</div>
+          <div class="gtip"><div class="gtip-arrow">→</div>Never share Aadhaar, PAN or bank details via any chat.</div>
+          <div class="gtip"><div class="gtip-arrow">→</div>Verify suspicious contact by calling the official number.</div>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-head"><span>💻</span><h3>DEVICE HARDENING</h3></div>
+          <div class="gtip"><div class="gtip-arrow">→</div>Apply OS updates immediately — they patch critical CVEs.</div>
+          <div class="gtip"><div class="gtip-arrow">→</div>Backup data — 3-2-1 rule: 3 copies, 2 media, 1 offsite.</div>
+          <div class="gtip"><div class="gtip-arrow">→</div>Lock screen when leaving workstation unattended.</div>
+          <div class="gtip"><div class="gtip-arrow">→</div>Use Windows Defender or reputable AV software.</div>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-head"><span>🌐</span><h3>SOCIAL ENGINEERING</h3></div>
+          <div class="gtip"><div class="gtip-arrow">→</div>Never expose address, phone or government IDs online.</div>
+          <div class="gtip"><div class="gtip-arrow">→</div>Set all social profiles to private — limit visibility.</div>
+          <div class="gtip"><div class="gtip-arrow">→</div>Unknown contacts requesting money = social engineering.</div>
+          <div class="gtip"><div class="gtip-arrow">→</div>Always log out of accounts on shared devices.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+// Matrix rain
+const canvas = document.getElementById('matrix-canvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+const cols = Math.floor(canvas.width / 16);
+const drops = Array(cols).fill(1);
+const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*(){}[]<>/\\|_-+=~`';
+function drawMatrix() {
+  ctx.fillStyle = 'rgba(0,0,0,0.05)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#00fff7';
+  ctx.font = '12px Share Tech Mono';
+  drops.forEach((y, i) => {
+    const char = chars[Math.floor(Math.random() * chars.length)];
+    ctx.fillText(char, i * 16, y * 16);
+    if (y * 16 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+    drops[i]++;
+  });
+}
+setInterval(drawMatrix, 60);
+
+// Nav
+const pageInfo = {
+  dashboard: ['ROOT / DASHBOARD', 'SECURITY DASHBOARD'],
+  phishing: ['ROOT / TOOLS', 'PHISHING DETECTOR'],
+  password: ['ROOT / TOOLS', 'PASSWORD ANALYZER'],
+  portscan: ['ROOT / TOOLS', 'PORT SCANNER'],
+  anomaly: ['ROOT / TOOLS', 'ANOMALY DETECTION'],
+  filescan: ['ROOT / TOOLS', 'FILE SCANNER'],
+  messagescan: ['ROOT / TOOLS', 'MESSAGE SCANNER'],
+  guide: ['ROOT / EDUCATION', 'SECURITY GUIDE'],
+};
+
+function showPanel(name, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  el.classList.add('active');
+  document.getElementById('page-path').textContent = pageInfo[name][0];
+  document.getElementById('page-title').textContent = pageInfo[name][1];
+}
+
+function goHome() {
+  showPanel('dashboard', document.querySelector('.nav-item'));
+}
+
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// Scan animation
+const scanMessages = {
+  phishing: ['Resolving DNS records...','Checking domain age...','Analyzing URL patterns...','Scanning for redirects...','Running AI threat model...','Checking blacklists...','Finalizing report...'],
+  password: ['Calculating character entropy...','Checking against breach databases...','Analyzing pattern complexity...','Running dictionary attack simulation...','Computing brute-force resistance...','Generating recommendations...'],
+  portscan: ['Initializing TCP socket sweep...','Probing port 22/SSH...','Probing port 80/HTTP...','Probing port 443/HTTPS...','Probing port 3306/MySQL...','Analyzing open services...','Running AI risk assessment...'],
+  anomaly: ['Parsing log structure...','Detecting IP patterns...','Scanning for brute-force signatures...','Running behavioral analysis...','Cross-referencing threat intel...','Generating threat report...'],
+  filescan: ['Reading file header bytes...','Checking magic bytes...','Scanning for malicious strings...','Analyzing code entropy...','Running signature matching...','Finalizing verdict...'],
+  message: ['Tokenizing message content...','Running NLP threat detection...','Checking URL patterns...','Analyzing urgency indicators...','Scanning for social engineering...','Generating verdict...'],
+};
+
+function startScanAnimation(tool, onComplete) {
+  const loadEl = document.getElementById(tool + '-loading');
+  const barEl = document.getElementById(tool + '-bar');
+  const glowEl = document.getElementById(tool + '-glow');
+  const pctEl = document.getElementById(tool + '-pct');
+  const linesEl = document.getElementById(tool + '-lines');
+
+  loadEl.classList.add('show');
+  let pct = 0;
+  const msgs = scanMessages[tool] || scanMessages.phishing;
+  let msgIdx = 0;
+
+  const interval = setInterval(() => {
+    pct += Math.random() * 4 + 1;
+    if (pct > 99) pct = 99;
+    barEl.style.width = pct + '%';
+    glowEl.style.left = pct + '%';
+    pctEl.textContent = Math.floor(pct) + '%';
+
+    if (Math.random() > 0.6 && msgIdx < msgs.length) {
+      const line = document.createElement('div');
+      line.className = 'line';
+      line.textContent = '> ' + msgs[msgIdx++];
+      linesEl.appendChild(line);
+      linesEl.scrollTop = linesEl.scrollHeight;
+    }
+  }, 120);
+
+  return { interval, loadEl, barEl, glowEl, pctEl };
+}
+
+function finishScan(anim) {
+  clearInterval(anim.interval);
+  anim.barEl.style.width = '100%';
+  anim.glowEl.style.left = '100%';
+  anim.pctEl.textContent = '100%';
+  setTimeout(() => { anim.loadEl.classList.remove('show'); }, 400);
+}
+
+// Risk circle HTML
+function riskCircle(score, color) {
+  const circumference = 251;
+  const offset = circumference - (score / 100) * circumference;
+  return `
+    <div class="risk-circle-wrap">
+      <div class="risk-circle">
+        <svg viewBox="0 0 90 90">
+          <circle class="risk-circle-bg" cx="45" cy="45" r="40"/>
+          <circle class="risk-circle-fill" cx="45" cy="45" r="40" stroke="${color}"
+            style="stroke-dashoffset:${circumference}" id="risk-anim-circle"/>
+        </svg>
+        <div class="risk-circle-text">
+          <div class="risk-pct" style="color:${color};text-shadow:0 0 10px ${color}">${score}</div>
+          <div class="risk-label-sm">RISK</div>
+        </div>
+      </div>
+      <div class="risk-circle-label">THREAT SCORE</div>
+    </div>`;
+}
+
+function animateCircle(score) {
+  setTimeout(() => {
+    const c = document.getElementById('risk-anim-circle');
+    if (c) c.style.strokeDashoffset = 251 - (score / 100) * 251;
+  }, 100);
+}
+
+function getColor(score) {
+  if (score <= 30) return '#00ff41';
+  if (score <= 65) return '#ffaa00';
+  return '#ff0044';
+}
+
+function verdictClass(v) {
+  v = (v || '').toUpperCase();
+  if (['SAFE','CLEAN','NONE'].includes(v)) return 'vb-safe';
+  if (['SUSPICIOUS','LOW','MEDIUM','FAIR'].includes(v)) return 'vb-warn';
+  return 'vb-danger';
+}
+
+function rBlock(label, content) {
+  return `<div class="r-block"><div class="r-block-head">${label}</div><div class="r-block-body">${content}</div></div>`;
+}
+
+function showResult(id, html) {
+  const el = document.getElementById(id);
+  el.innerHTML = html;
+  el.classList.add('show');
+}
+
+// Add to live feed
+function addFeed(msg, type, badge, badgeClass) {
+  const feed = document.getElementById('live-feed');
+  const now = new Date();
+  const time = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  const dotClass = { safe:'fd-green', warn:'fd-amber', danger:'fd-red', info:'fd-cyan' }[type] || 'fd-cyan';
+  const item = document.createElement('div');
+  item.className = 'feed-item';
+  item.innerHTML = `<div class="feed-dot ${dotClass}"></div><div class="feed-time">${time}</div><div class="feed-msg">${msg}</div><div class="feed-badge ${badgeClass}">${badge}</div>`;
+  feed.insertBefore(item, feed.firstChild);
+  if (feed.children.length > 6) feed.removeChild(feed.lastChild);
+}
+
+// Phishing
+async function checkPhishing() {
+  const url = document.getElementById('phishing-url').value.trim();
+  if (!url) { alert('Enter a URL'); return; }
+  document.getElementById('phishing-result').classList.remove('show');
+  const anim = startScanAnimation('phishing');
+  try {
+    const res = await fetch('/api/phishing', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({url}) });
+    const d = await res.json();
+    finishScan(anim);
+    const color = getColor(d.risk_score);
+    const vc = verdictClass(d.verdict);
+    showResult('phishing-result', `
+      <div class="result-top">
+        ${riskCircle(d.risk_score, color)}
+        <div class="verdict-info">
+          <div class="verdict-badge-big ${vc}">${d.verdict==='SAFE'?'✅':'⚠'} ${d.verdict}</div>
+          <div class="verdict-meta">TARGET: ${url.substring(0,50)}...\nRISK SCORE: ${d.risk_score}/100\nANALYSIS: COMPLETE</div>
+        </div>
+      </div>
+      <div class="result-blocks">
+        ${d.patterns.length ? rBlock('Detected Patterns', d.patterns.map(p=>'• '+p).join('\n')) : ''}
+        ${rBlock('AI Analysis', d.reasons)}
+        ${d.advice ? rBlock('Recommendation', d.advice) : ''}
+      </div>
+    `);
+    animateCircle(d.risk_score);
+    addFeed(`Phishing scan: ${url.substring(0,40)}`, d.verdict==='SAFE'?'safe':'danger', d.verdict, d.verdict==='SAFE'?'fb-safe':'fb-danger');
+  } catch(e) {
+    finishScan(anim);
+    showResult('phishing-result', `<div style="color:var(--red);font-family:var(--mono);font-size:12px">ERROR: ${e.message}</div>`);
+  }
+}
+
+// Password
+async function checkPassword() {
+  const password = document.getElementById('password-input').value;
+  if (!password) { alert('Enter a password'); return; }
+  document.getElementById('password-result').classList.remove('show');
+  const anim = startScanAnimation('password');
+  try {
+    const res = await fetch('/api/password', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({password}) });
+    const d = await res.json();
+    finishScan(anim);
+    const checks = d.checks;
+    const items = [['12+ CHARS',checks.length],['UPPERCASE',checks.uppercase],['LOWERCASE',checks.lowercase],['NUMBERS',checks.numbers],['SYMBOLS',checks.symbols],['NOT COMMON',checks.no_common]];
+    const color = d.score>=80?'#00ff41':d.score>=50?'#ffaa00':'#ff0044';
+    showResult('password-result', `
+      <div class="result-top">
+        ${riskCircle(d.score, color)}
+        <div class="verdict-info">
+          <div class="verdict-badge-big ${verdictClass(d.strength)}">${d.score>=80?'✅':'⚠'} ${d.strength}</div>
+          <div class="verdict-meta">ENTROPY SCORE: ${d.score}/100\nSTATUS: ANALYSIS COMPLETE</div>
+        </div>
+      </div>
+      <div class="check-grid">${items.map(([l,p])=>`<div class="check-item ${p?'ci-pass':'ci-fail'}">${p?'✓':'✗'} ${l}</div>`).join('')}</div>
+      <div class="result-blocks">
+        ${rBlock('AI Recommendations', d.tips)}
+        ${d.example ? rBlock('Stronger Pattern Example', d.example) : ''}
+      </div>
+    `);
+    animateCircle(d.score);
+    addFeed(`Password analyzed — Strength: ${d.strength}`, d.score>=80?'safe':d.score>=50?'warn':'danger', d.strength, d.score>=80?'fb-safe':'fb-warn');
+  } catch(e) {
+    finishScan(anim);
+    showResult('password-result', `<div style="color:var(--red);font-family:var(--mono);font-size:12px">ERROR: ${e.message}</div>`);
+  }
+}
+
+// Port Scan
+async function scanPorts() {
+  const host = document.getElementById('host-input').value.trim();
+  if (!host) { alert('Enter a host'); return; }
+  document.getElementById('portscan-result').classList.remove('show');
+  const anim = startScanAnimation('portscan');
+  try {
+    const res = await fetch('/api/portscan', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({host}) });
+    const d = await res.json();
+    finishScan(anim);
+    showResult('portscan-result', `
+      <div class="result-top">
+        ${riskCircle(d.open_ports.length * 15, getColor(d.open_ports.length * 15))}
+        <div class="verdict-info">
+          <div class="verdict-badge-big ${d.open_ports.length>3?'vb-danger':d.open_ports.length>0?'vb-warn':'vb-safe'}">${d.open_ports.length>3?'⚠ HIGH RISK':d.open_ports.length>0?'⚠ MEDIUM':'✅ SECURE'}</div>
+          <div class="verdict-meta">HOST: ${d.host}\nPORTS SCANNED: ${d.total_scanned}\nOPEN PORTS: ${d.open_ports.length}</div>
+        </div>
+      </div>
+      <div class="port-tags">${d.open_ports.length ? d.open_ports.map(p=>`<span class="port-tag">${p.port}/${p.service}</span>`).join('') : '<span style="color:var(--green);font-family:var(--mono);font-size:12px">✓ NO OPEN PORTS DETECTED</span>'}</div>
+      <div class="result-blocks">${rBlock('AI Security Analysis', d.analysis)}</div>
+    `);
+    animateCircle(Math.min(d.open_ports.length * 15, 100));
+    addFeed(`Port scan: ${host} — ${d.open_ports.length} open ports`, d.open_ports.length>3?'danger':'warn', `${d.open_ports.length} OPEN`, d.open_ports.length>3?'fb-danger':'fb-warn');
+  } catch(e) {
+    finishScan(anim);
+    showResult('portscan-result', `<div style="color:var(--red);font-family:var(--mono);font-size:12px">ERROR: ${e.message}</div>`);
+  }
+}
+
+// Anomaly
+async function detectAnomaly() {
+  const log_data = document.getElementById('log-input').value.trim();
+  if (!log_data) { alert('Enter log data'); return; }
+  document.getElementById('anomaly-result').classList.remove('show');
+  const anim = startScanAnimation('anomaly');
+  try {
+    const res = await fetch('/api/anomaly', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({log_data}) });
+    const d = await res.json();
+    finishScan(anim);
+    const score = d.anomalies_count * 20;
+    showResult('anomaly-result', `
+      <div class="result-top">
+        ${riskCircle(Math.min(score,100), getColor(score))}
+        <div class="verdict-info">
+          <div class="verdict-badge-big ${verdictClass(d.threat_level)}">⚡ ${d.threat_level}</div>
+          <div class="verdict-meta">ANOMALIES DETECTED: ${d.anomalies_count}\nANALYSIS: COMPLETE</div>
+        </div>
+      </div>
+      <div class="result-blocks">${rBlock('Full Neural Analysis', d.full_analysis)}</div>
+    `);
+    animateCircle(Math.min(score, 100));
+    addFeed(`Anomaly scan complete — ${d.anomalies_count} anomalies`, d.anomalies_count>2?'danger':'warn', d.threat_level, d.anomalies_count>2?'fb-danger':'fb-warn');
+  } catch(e) {
+    finishScan(anim);
+    showResult('anomaly-result', `<div style="color:var(--red);font-family:var(--mono);font-size:12px">ERROR: ${e.message}</div>`);
+  }
+}
+
+// File scan
+document.getElementById('file-input').addEventListener('change', function() {
+  const fn = document.getElementById('file-name');
+  if (this.files[0]) { fn.textContent = '> FILE LOADED: ' + this.files[0].name; fn.style.display='block'; }
+});
+
+async function scanFile() {
+  const fi = document.getElementById('file-input');
+  if (!fi.files[0]) { alert('Select a file first'); return; }
+  document.getElementById('filescan-result').classList.remove('show');
+  const anim = startScanAnimation('filescan');
+  const fd = new FormData();
+  fd.append('file', fi.files[0]);
+  try {
+    const res = await fetch('/api/filescan', { method:'POST', body: fd });
+    const d = await res.json();
+    finishScan(anim);
+    const color = getColor(d.risk_score);
+    showResult('filescan-result', `
+      <div class="result-top">
+        ${riskCircle(d.risk_score, color)}
+        <div class="verdict-info">
+          <div class="verdict-badge-big ${verdictClass(d.verdict)}">${d.verdict==='CLEAN'?'✅':'⚠'} ${d.verdict}</div>
+          <div class="verdict-meta">FILE: ${d.filename}\nEXTENSION: .${d.extension}\nRISK SCORE: ${d.risk_score}/100</div>
+        </div>
+      </div>
+      ${d.suspicious_strings.length ? `<div class="result-blocks">${rBlock('Suspicious Strings Detected', d.suspicious_strings.map(s=>'• '+s).join('\n'))}</div>` : ''}
+      <div class="result-blocks">${rBlock('AI Malware Analysis', d.full_analysis)}</div>
+    `);
+    animateCircle(d.risk_score);
+    addFeed(`File scanned: ${d.filename}`, d.verdict==='CLEAN'?'safe':'danger', d.verdict, d.verdict==='CLEAN'?'fb-safe':'fb-danger');
+  } catch(e) {
+    finishScan(anim);
+    showResult('filescan-result', `<div style="color:var(--red);font-family:var(--mono);font-size:12px">ERROR: ${e.message}</div>`);
+  }
+}
+
+// Message scan
+async function scanMessage() {
+  const activeTab = document.querySelector('.tab-content.active').id;
+  document.getElementById('message-result').classList.remove('show');
+  const anim = startScanAnimation('message');
+  const fd = new FormData();
+  if (activeTab === 'msg-text') {
+    const msg = document.getElementById('message-input').value.trim();
+    if (!msg) { alert('Enter a message'); finishScan(anim); return; }
+    fd.append('message', msg);
+  } else {
+    const ss = document.getElementById('screenshot-input').files[0];
+    if (!ss) { alert('Upload a screenshot'); finishScan(anim); return; }
+    fd.append('screenshot', ss);
+  }
+  try {
+    const res = await fetch('/api/messagescan', { method:'POST', body: fd });
+    const d = await res.json();
+    finishScan(anim);
+    showResult('message-result', `
+      <div class="result-top">
+        ${riskCircle(d.confidence, d.verdict==='SAFE'?'#00ff41':'#ff0044')}
+        <div class="verdict-info">
+          <div class="verdict-badge-big ${verdictClass(d.verdict)}">${d.verdict==='SAFE'?'✅':'🚨'} ${d.verdict}</div>
+          <div class="verdict-meta">CONFIDENCE: ${d.confidence}%\nANALYSIS: COMPLETE</div>
+        </div>
+      </div>
+      <div class="result-blocks">${rBlock('AI Threat Analysis', d.full_analysis)}</div>
+    `);
+    animateCircle(d.confidence);
+    addFeed(`Message scanned — ${d.verdict}`, d.verdict==='SAFE'?'safe':'danger', d.verdict, d.verdict==='SAFE'?'fb-safe':'fb-danger');
+  } catch(e) {
+    finishScan(anim);
+    showResult('message-result', `<div style="color:var(--red);font-family:var(--mono);font-size:12px">ERROR: ${e.message}</div>`);
+  }
+}
+
+// Live feed with fake activity
+const fakeFeedData = [
+  ['System initialized — all modules online', 'info', 'ONLINE', 'fb-safe'],
+  ['Threat database updated — 142 new signatures', 'info', 'UPDATED', 'fb-safe'],
+  ['URL blocked: phish-login.xyz [HIGH RISK]', 'danger', 'BLOCKED', 'fb-danger'],
+  ['Password scan: Str0ngP@ss! [94/100]', 'safe', 'STRONG', 'fb-safe'],
+  ['File scan: invoice.pdf [CLEAN]', 'safe', 'CLEAN', 'fb-safe'],
+];
+
+fakeFeedData.reverse().forEach(([msg, type, badge, bc]) => addFeed(msg, type, badge, bc));
+
+// Counter animation
+let count = 142;
+setInterval(() => {
+  if (Math.random() > 0.7) {
+    count++;
+    const el = document.getElementById('blocked-count');
+    if (el) el.textContent = count;
+  }
+}, 3000);
+</script>
+</body>
+</html>
